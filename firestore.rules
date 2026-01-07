@@ -1,0 +1,130 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isOneOf(list) {
+      return request.auth.uid in list;
+    }
+
+    // Deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // USERS
+    // Users can read anyone's profile.
+    // Users can only create their own profile.
+    // Users can only update their own bio, displayName, and photoURL.
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isOwner(userId)
+                    && request.resource.data.followersCount == 0
+                    && request.resource.data.followingCount == 0;
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bio', 'displayName', 'photoURL', 'isPrivate']);
+    }
+    
+    // USERNAMES
+    // Used to enforce unique usernames.
+    match /usernames/{username} {
+        allow read: if true;
+        allow create: if isSignedIn() && isOwner(request.resource.data.uid);
+    }
+
+    // POSTS
+    // Posts can be read by anyone (unless owner is private - future rule).
+    // Posts can only be created by the owner.
+    // Posts can only be deleted by the owner.
+    // Likes and comments counts cannot be updated directly by the client.
+    match /posts/{postId} {
+      allow read: if true; // TODO: Add check for private accounts
+      allow create: if isSignedIn() 
+                    && isOwner(request.resource.data.authorId)
+                    && request.resource.data.likeCount == 0
+                    && request.resource.data.commentCount == 0;
+      allow update: if false; // Updates must be handled by transactions, not direct updates.
+      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+    }
+
+    // LIKES
+    // Users can only like/unlike a post for themselves.
+    match /posts/{postId}/likes/{userId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && isOwner(userId);
+    }
+
+    // COMMENTS
+    // Users can read comments.
+    // Users can only create comments for themselves.
+    // Users can only delete their own comments.
+     match /posts/{postId}/comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
+        allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+    }
+
+    // FOLLOWING
+    // Users can see who a user is following.
+    // Users can only follow/unfollow for themselves.
+    match /users/{userId}/following/{targetId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && isOwner(userId);
+    }
+    
+    // FOLLOWERS
+    // Users can see a user's followers.
+    // No direct client-side writes. This is managed by the follow/unfollow transaction.
+    match /users/{userId}/followers/{followerId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+    }
+
+    // NOTIFICATIONS
+    // Users can only read their own notifications.
+    // No direct client-side creation of notifications (handled by transactions).
+    // Users can update the 'read' status of their own notifications.
+    match /notifications/{userId}/{notificationId} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if false; // Created via transactions in backend logic
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+
+    // STORIES
+    // Can be read by anyone for now.
+    // Only owner can create/delete.
+    match /stories/{storyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
+      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+    }
+    
+    // CHATS
+    // Can only be read/updated by members of the chat.
+    match /chats/{chatId} {
+        allow read, update: if isSignedIn() && isOneOf(resource.data.members);
+        allow create: if isSignedIn() && isOneOf(request.resource.data.members);
+    }
+
+    // MESSAGES
+    // Can only be read by chat members.
+    // Can only be created by the sender who is a member of the chat.
+    match /chats/{chatId}/messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        allow create: if isSignedIn() 
+                     && isOwner(request.resource.data.senderId)
+                     && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        allow write: if false;
+    }
+  }
+}
