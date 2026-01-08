@@ -17,13 +17,15 @@ import type { Post } from '@/lib/types';
 import PostCard from '@/components/posts/PostCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import StoryBar from '@/components/stories/StoryBar';
+import FollowSuggestionCard from '@/components/shared/FollowSuggestionCard';
 
 function EmptyFeed() {
     return (
         <div className="space-y-6 text-left">
+            <FollowSuggestionCard userIdToFollow="3ycLMvh05xOtTnEW3DeWoWm3asZ2" />
             <div className="p-4 rounded-xl glass-card">
                  <h2 className="text-xl font-headline mb-2">Welcome to AURA</h2>
-                 <p className="text-muted-foreground mb-4">Follow people to see their posts here. The more you interact, the better your feed gets.</p>
+                 <p className="text-muted-foreground mb-4">Your feed is just getting started. Follow people to see their posts here. The more you interact, the better your feed gets.</p>
             </div>
         </div>
     );
