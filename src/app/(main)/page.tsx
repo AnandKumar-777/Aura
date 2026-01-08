@@ -26,8 +26,8 @@ function EmptyFeed() {
     return (
         <div className="space-y-6 text-left">
             <div className="p-4 rounded-xl glass-card">
-                 <h2 className="text-xl font-headline mb-2">Your feed is empty for now</h2>
-                 <p className="text-muted-foreground mb-4">Follow some people to see their posts here.</p>
+                 <h2 className="text-xl font-headline mb-2">Welcome to AURA</h2>
+                 <p className="text-muted-foreground mb-4">Your feed is being personalized. Follow some accounts and interact with posts to discover content you'll love.</p>
             </div>
         </div>
     );
