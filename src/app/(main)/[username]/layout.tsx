@@ -1,26 +1,19 @@
+import React from "react";
 
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-
-export default function ProfileSubLayout({
-  children,
-  params,
-}: {
+type LayoutProps = {
+  params: Promise<{
+    username: string;
+  }>;
   children: React.ReactNode;
-  params: { username: string };
-}) {
+};
+
+export default async function UserLayout({ params, children }: LayoutProps) {
+  const { username } = await params;
+
   return (
     <div>
-        <div className="flex items-center gap-4 mb-4">
-            <Button asChild variant="ghost" size="icon">
-                <Link href={`/${params.username}`}>
-                    <ArrowLeft />
-                </Link>
-            </Button>
-            <h1 className="text-xl font-bold">{params.username}</h1>
-        </div>
-        {children}
+      {/* optional: username context */}
+      {children}
     </div>
   );
 }
