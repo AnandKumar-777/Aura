@@ -57,7 +57,7 @@ export default function HomePage() {
         
         const followedUserIds = [...followingIds, user.uid]; // Include own posts in feed
 
-        if (followingIds.length === 0) {
+        if (followedUserIds.length === 0) {
             setPosts([]);
             setLoading(false);
             return;
