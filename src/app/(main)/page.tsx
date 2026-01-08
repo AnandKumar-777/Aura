@@ -27,11 +27,21 @@ function EmptyFeed() {
         <div className="space-y-6 text-left">
             <div className="p-4 rounded-xl glass-card">
                  <h2 className="text-xl font-headline mb-2">Welcome to AURA</h2>
-                 <p className="text-muted-foreground mb-4">Your feed is being personalized. Follow some accounts and interact with posts to discover content you'll love.</p>
+                 <p className="text-muted-foreground mb-4">Your feed is being personalized for you. The more you interact, the better it gets.</p>
             </div>
         </div>
     );
 }
+
+// Helper function to chunk an array into smaller arrays
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunkedArr: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunkedArr.push(array.slice(i, i + size));
+  }
+  return chunkedArr;
+}
+
 
 export default function HomePage() {
   const { user, userProfile } = useAuth();
@@ -63,21 +73,39 @@ export default function HomePage() {
             return;
         }
 
-        // Fetch posts from followed users. Firestore 'in' queries are limited to 30 items.
-        const postsQuery = query(
-          collection(db, 'posts'),
-          where('authorId', 'in', followedUserIds.slice(0, 30)),
-          orderBy('createdAt', 'desc'),
-          limit(20)
-        );
+        // Firestore 'in' queries are limited to 30 items. We need to batch requests.
+        const userIdChunks = chunkArray(followedUserIds, 30);
+        const postPromises: Promise<any>[] = [];
 
-        const postsSnapshot = await getDocs(postsQuery);
-        const postsData = postsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Post[];
+        userIdChunks.forEach(chunk => {
+            const postsQuery = query(
+              collection(db, 'posts'),
+              where('authorId', 'in', chunk),
+              orderBy('createdAt', 'desc'),
+              limit(20) // Get up to 20 posts per chunk
+            );
+            postPromises.push(getDocs(postsQuery));
+        });
+        
+        const allPostsSnapshots = await Promise.all(postPromises);
+        
+        let postsData: Post[] = [];
+        allPostsSnapshots.forEach(snapshot => {
+            snapshot.docs.forEach(doc => {
+                postsData.push({ id: doc.id, ...doc.data() } as Post);
+            });
+        });
+        
+        // Sort all fetched posts by creation date
+        postsData.sort((a, b) => {
+            const dateA = a.createdAt as any;
+            const dateB = b.createdAt as any;
+            return dateB.seconds - dateA.seconds;
+        });
 
-        setPosts(postsData);
+        // Limit the final feed size
+        setPosts(postsData.slice(0, 50));
+
       } catch (error) {
         console.error('Error fetching feed:', error);
       } finally {
