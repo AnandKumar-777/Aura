@@ -100,7 +100,7 @@
       radial-gradient(1px 1px at 160px 120px, #ddd, rgba(0, 0, 0, 0));
     background-repeat: repeat;
     background-size: 200px 200px;
-    opacity: 0.8;
+    opacity: 0.6;
   }
   .stars-md {
     animation: animate-stars 150s linear infinite;
@@ -132,6 +132,6 @@
       radial-gradient(2px 2px at 180px 150px, #ddd, rgba(0, 0, 0, 0));
     background-repeat: repeat;
     background-size: 400px 400px;
-    opacity: 0.4;
+    opacity: 0.6;
   }
 }
