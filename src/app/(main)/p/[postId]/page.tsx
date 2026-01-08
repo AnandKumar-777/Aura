@@ -39,8 +39,8 @@ export default async function PostPage({ params }: { params: { postId: string } 
     }
     
     return (
-        <div className="max-w-4xl mx-auto md:-m-4">
-             <div className="border rounded-lg overflow-hidden h-[calc(100vh-5rem)]">
+        <div className="max-w-4xl mx-auto h-full">
+             <div className="border rounded-lg overflow-hidden h-full md:h-auto md:max-h-[calc(100vh-6rem)]">
                 <PostView post={post} />
             </div>
         </div>

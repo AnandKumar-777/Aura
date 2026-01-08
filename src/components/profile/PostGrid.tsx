@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { MessageCircle, Camera, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
 export default function PostGrid({ posts }: { posts: Post[] }) {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -60,7 +61,10 @@ export default function PostGrid({ posts }: { posts: Post[] }) {
       </div>
       {selectedPost && (
          <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
-            <DialogContent className="max-w-4xl w-full p-0 !h-[90vh] !max-h-[700px] flex !rounded-lg border-0">
+            <DialogContent className={cn(
+              "p-0 border-0 !rounded-lg",
+              selectedPost.imageUrl ? "max-w-4xl w-full h-[90vh] max-h-[700px] flex" : "max-w-md w-full"
+            )}>
                  <PostView post={selectedPost} />
             </DialogContent>
          </Dialog>

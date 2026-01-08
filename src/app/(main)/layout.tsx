@@ -34,8 +34,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  // Don't apply padding for full-screen post view or chat on desktop
-  const isPostPage = /^\/p\/[a-zA-Z0-9]+$/.test(pathname);
+  // Don't apply padding for full-screen chat on desktop
   const isChatPage = /^\/messages\/[a-zA-Z0-9]+$/.test(pathname);
 
   return (
@@ -43,7 +42,7 @@ export default function MainLayout({
       <Header />
       <main className={cn(
         "flex-1 w-full max-w-4xl mx-auto py-4 px-4 sm:px-6 lg:px-8 pb-24 md:pb-4",
-        (isPostPage || isChatPage) && "p-0 sm:p-0 lg:p-0 max-w-none"
+        isChatPage && "p-0 sm:p-0 lg:p-0 max-w-none"
       )}>
         {children}
       </main>

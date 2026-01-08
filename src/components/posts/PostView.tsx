@@ -35,6 +35,78 @@ const toDate = (timestamp: Timestamp | string | undefined): Date | null => {
   return null;
 };
 
+function PostHeader({ author, post, isAuthor, onDeleteClick }: { author: UserProfile | null, post: Post, isAuthor: boolean, onDeleteClick: () => void }) {
+    if (!author) return null;
+    return (
+        <div className="flex items-center p-4 border-b">
+            <Link href={`/${author.username}`} className="flex items-center gap-3 flex-1">
+                <Avatar className="h-9 w-9">
+                    <AvatarImage src={author.photoURL} alt={author.username} />
+                    <AvatarFallback>{author.username[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="font-semibold text-sm hover:underline">{author.username}</span>
+            </Link>
+            {isAuthor && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="w-8 h-8">
+                            <MoreHorizontal className="w-5 h-5" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>Hide like count</DropdownMenuItem>
+                        <DropdownMenuItem>Turn off commenting</DropdownMenuItem>
+                        <DropdownMenuItem onClick={onDeleteClick} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
+        </div>
+    );
+}
+
+
+function PostActions({ post, isLiked, isLiking, onLikeToggle }: { post: Post, isLiked: boolean, isLiking: boolean, onLikeToggle: () => void}) {
+    const postDate = toDate(post.createdAt);
+    return (
+        <div className="border-t mt-auto p-2 md:p-4">
+            <div className="flex items-center space-x-1 mb-2">
+                <Button variant="ghost" size="icon" onClick={onLikeToggle} disabled={isLiking} className="text-foreground/80 hover:text-foreground hover:bg-accent rounded-full">
+                    <Heart className={cn('h-6 w-6', isLiked && 'fill-red-500 text-red-500')} />
+                </Button>
+                <Button variant="ghost" size="icon" className="text-foreground/80 hover:text-foreground hover:bg-accent rounded-full">
+                    <MessageCircle className="h-6 w-6" />
+                </Button>
+            </div>
+            <p className="text-sm font-semibold mb-2">{post.likeCount} likes</p>
+            {postDate && <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
+                {formatDistanceToNow(postDate, { addSuffix: true })}
+            </p>}
+        </div>
+    );
+}
+
+function CommentForm({ onSubmit, newComment, setNewComment, user, isSubmitting }: { onSubmit: (e: FormEvent) => void, newComment: string, setNewComment: (val: string) => void, user: any, isSubmitting: boolean }) {
+     return (
+        <form onSubmit={onSubmit} className="flex items-center gap-2 border-t p-4">
+            <Input
+                placeholder="Add a comment..."
+                className="flex-1"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                disabled={!user}
+            />
+            <Button type="submit" variant="ghost" disabled={!user || !newComment.trim() || isSubmitting} className="hover:bg-accent">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+            </Button>
+        </form>
+     )
+}
+
+
 export default function PostView({ post: initialPost }: { post: Post }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -48,7 +120,6 @@ export default function PostView({ post: initialPost }: { post: Post }) {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const postDate = toDate(post.createdAt);
   const isAuthor = user?.uid === post.authorId;
 
   useEffect(() => {
@@ -202,42 +273,18 @@ export default function PostView({ post: initialPost }: { post: Post }) {
 
   return (
     <>
-    <div className="flex flex-col md:flex-row w-full h-full bg-card">
+    <div className={cn(
+        "flex flex-col md:flex-row w-full h-full bg-card",
+        !post.imageUrl && "md:flex-col" // Force column layout for text-only posts on desktop
+    )}>
       {post.imageUrl && (
         <div className="w-full md:w-1/2 lg:w-3/5 relative bg-black/90 md:rounded-l-lg overflow-hidden">
             <Image src={post.imageUrl} alt={post.caption} layout="fill" objectFit="contain" />
         </div>
       )}
       <div className={cn("w-full flex flex-col", post.imageUrl && "md:w-1/2 lg:w-2/5")}>
-        {author && (
-          <div className="flex items-center p-4 border-b">
-            <Link href={`/${author.username}`} className="flex items-center gap-3 flex-1">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={author.photoURL} alt={author.username} />
-                <AvatarFallback>{author.username[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <span className="font-semibold text-sm hover:underline">{author.username}</span>
-            </Link>
-             {isAuthor && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-8 h-8">
-                    <MoreHorizontal className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                  <DropdownMenuItem>Hide like count</DropdownMenuItem>
-                  <DropdownMenuItem>Turn off commenting</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        )}
+          <PostHeader author={author} post={post} isAuthor={isAuthor} onDeleteClick={() => setIsDeleteDialogOpen(true)} />
+
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
              {author && (
@@ -253,9 +300,9 @@ export default function PostView({ post: initialPost }: { post: Post }) {
                             <Link href={`/${author.username}`} className="font-semibold mr-2 hover:underline">{author.username}</Link>
                             {post.caption}
                         </p>
-                        {postDate && <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(postDate, { addSuffix: true })}
-                        </p>}
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {formatDistanceToNow(toDate(post.createdAt)!, { addSuffix: true })}
+                        </p>
                     </div>
                  </div>
              )}
@@ -287,31 +334,9 @@ export default function PostView({ post: initialPost }: { post: Post }) {
             </div>
           </div>
         </ScrollArea>
-        <div className="border-t mt-auto p-2 md:p-4">
-            <div className="flex items-center space-x-1 mb-2">
-                <Button variant="ghost" size="icon" onClick={handleLikeToggle} disabled={isLiking} className="text-foreground/80 hover:text-foreground hover:bg-accent rounded-full">
-                    <Heart className={cn('h-6 w-6', isLiked && 'fill-red-500 text-red-500')} />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-foreground/80 hover:text-foreground hover:bg-accent rounded-full">
-                    <MessageCircle className="h-6 w-6" />
-                </Button>
-            </div>
-            <p className="text-sm font-semibold mb-2">{post.likeCount} likes</p>
-            {postDate && <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
-                {formatDistanceToNow(postDate, { addSuffix: true })}
-            </p>}
-            <form onSubmit={handleCommentSubmit} className="flex items-center gap-2">
-                <Input
-                    placeholder="Add a comment..."
-                    className="flex-1"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    disabled={!user}
-                />
-                <Button type="submit" variant="ghost" disabled={!user || !newComment.trim() || isSubmittingComment} className="hover:bg-accent">
-                    {isSubmittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
-                </Button>
-            </form>
+        <div className="mt-auto">
+            <PostActions post={post} isLiked={isLiked} isLiking={isLiking} onLikeToggle={handleLikeToggle} />
+            <CommentForm onSubmit={handleCommentSubmit} newComment={newComment} setNewComment={setNewComment} user={user} isSubmitting={isSubmittingComment}/>
         </div>
       </div>
     </div>
