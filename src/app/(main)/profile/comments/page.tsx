@@ -11,8 +11,9 @@ import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { MessageSquare } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { notFound, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 type CommentWithPost = Comment & { post: Post };
 
@@ -35,6 +36,7 @@ export default function UserCommentsPage() {
   const { user, loading: authLoading } = useAuth();
   const [comments, setComments] = useState<CommentWithPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (authLoading) return;
@@ -76,8 +78,13 @@ export default function UserCommentsPage() {
 
   if (authLoading || loading) {
     return (
-      <div>
-        <h1 className="text-2xl font-bold mb-4">My Comments</h1>
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-4 mb-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <ArrowLeft />
+            </Button>
+            <h1 className="text-2xl font-headline font-bold">My Comments</h1>
+        </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-4 p-4 glass-card rounded-xl">
@@ -97,20 +104,32 @@ export default function UserCommentsPage() {
   if (!user) {
     return notFound();
   }
+  
+  const PageHeader = () => (
+    <div className="flex items-center gap-4 mb-4">
+      <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft />
+      </Button>
+      <h1 className="text-2xl font-headline font-bold">My Comments</h1>
+    </div>
+  );
 
   if (comments.length === 0) {
     return (
-      <div className="text-center py-20">
-        <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h2 className="mt-4 text-xl font-semibold">No Comments Yet</h2>
-        <p className="mt-2 text-sm text-muted-foreground">You haven't commented on any posts.</p>
+      <div className="max-w-2xl mx-auto">
+        <PageHeader />
+        <div className="text-center py-20">
+            <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h2 className="mt-4 text-xl font-semibold">No Comments Yet</h2>
+            <p className="mt-2 text-sm text-muted-foreground">You haven't commented on any posts.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-headline font-bold mb-4">My Comments</h1>
+      <PageHeader />
       <div className="space-y-4">
         {comments.map(({ id, text, createdAt, post }) => {
           const commentDate = toDate(createdAt);
