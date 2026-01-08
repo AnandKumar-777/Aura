@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { notFound, useRouter } from 'next/navigation';
@@ -59,10 +58,14 @@ export default function UserCommentsPage() {
 
         for (const commentDoc of commentsSnapshot.docs) {
           const comment = { id: commentDoc.id, ...commentDoc.data() } as Comment;
-          const postSnap = await getDoc(doc(db, 'posts', comment.postId));
-          if (postSnap.exists()) {
-            const post = { id: postSnap.id, ...postSnap.data() } as Post;
-            commentsData.push({ ...comment, post });
+          // The post ID is nested inside the comment document's path
+          const postId = commentDoc.ref.parent.parent?.id;
+          if (postId) {
+            const postSnap = await getDoc(doc(db, 'posts', postId));
+            if (postSnap.exists()) {
+              const post = { id: postSnap.id, ...postSnap.data() } as Post;
+              commentsData.push({ ...comment, postId, post });
+            }
           }
         }
         setComments(commentsData);
@@ -88,7 +91,6 @@ export default function UserCommentsPage() {
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-4 p-4 glass-card rounded-xl">
-              <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-4 w-3/4" />
