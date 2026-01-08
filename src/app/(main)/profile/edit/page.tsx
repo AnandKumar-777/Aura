@@ -124,14 +124,14 @@ export default function EditProfilePage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           
-          <Accordion type="single" collapsible className="w-full" defaultValue="personal-details">
-              <AccordionItem value="personal-details">
-                <AccordionTrigger>
+          <div className="flex flex-col">
+              <div className="border-b">
+                <div className="flex flex-1 items-center justify-between py-4 font-medium">
                     <div className="flex items-center gap-3">
                         <User className="h-5 w-5"/> Personal Details
                     </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-6 pt-4">
+                </div>
+                <div className="pb-4 pt-0 space-y-6">
                     <div className="flex items-center gap-4">
                         <Avatar className="w-20 h-20">
                         <AvatarImage src={preview || userProfile.photoURL} />
@@ -189,73 +189,74 @@ export default function EditProfilePage() {
                         </FormItem>
                         )}
                     />
-                </AccordionContent>
-              </AccordionItem>
+                </div>
+              </div>
 
-            <AccordionItem value="account-type">
-                <AccordionTrigger>
-                    <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5"/> Account type and tools
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                    <FormField
-                    control={form.control}
-                    name="isPrivate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                            Private Account
-                            </FormLabel>
-                            <p className="text-sm text-muted-foreground">
-                            When your account is private, only people you approve can see your posts.
-                            </p>
-                        </div>
-                        <FormControl>
-                            <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
-                        </FormItem>
-                    )}
-                    />
-                </AccordionContent>
-            </AccordionItem>
-            
-            <AccordionItem value="password-link" className="border-b">
-                 <Link href="/profile/security" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
-                    <div className="flex items-center gap-3">
-                        <Lock className="h-5 w-5"/> Password and security
-                    </div>
-                    <ChevronRight className="h-4 w-4 transition-transform" />
-                 </Link>
-            </AccordionItem>
-
-            <AccordionItem value="comments-link" className="border-b">
-                 <Link href="/profile/comments" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
-                    <div className="flex items-center gap-3">
-                        <MessageSquare className="h-5 w-5"/> Comments
-                    </div>
-                    <ChevronRight className="h-4 w-4 transition-transform" />
-                 </Link>
-            </AccordionItem>
-
-            {settingsItems.map(item => (
-                    <AccordionItem value={item.text} key={item.text}>
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="account-type">
                     <AccordionTrigger>
                         <div className="flex items-center gap-3">
-                            <item.icon className="h-5 w-5"/> {item.text}
+                            <Shield className="h-5 w-5"/> Account type and tools
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                        {item.content}
+                        <FormField
+                        control={form.control}
+                        name="isPrivate"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                Private Account
+                                </FormLabel>
+                                <p className="text-sm text-muted-foreground">
+                                When your account is private, only people you approve can see your posts.
+                                </p>
+                            </div>
+                            <FormControl>
+                                <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            </FormItem>
+                        )}
+                        />
                     </AccordionContent>
                 </AccordionItem>
-            ))}
+                
+                <div className="border-b">
+                    <Link href="/profile/security" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
+                        <div className="flex items-center gap-3">
+                            <Lock className="h-5 w-5"/> Password and security
+                        </div>
+                        <ChevronRight className="h-4 w-4 transition-transform" />
+                    </Link>
+                </div>
 
+                <div className="border-b">
+                    <Link href="/profile/comments" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
+                        <div className="flex items-center gap-3">
+                            <MessageSquare className="h-5 w-5"/> Comments
+                        </div>
+                        <ChevronRight className="h-4 w-4 transition-transform" />
+                    </Link>
+                </div>
+
+                {settingsItems.map(item => (
+                        <AccordionItem value={item.text} key={item.text}>
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-3">
+                                <item.icon className="h-5 w-5"/> {item.text}
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            {item.content}
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
             </Accordion>
+          </div>
           
           <Separator />
 
