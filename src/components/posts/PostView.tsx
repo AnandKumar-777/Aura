@@ -7,15 +7,18 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Heart, Loader2, MessageCircle } from 'lucide-react';
+import { Heart, Loader2, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useState, FormEvent } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, runTransaction, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, runTransaction, Timestamp, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 
 // Helper function to safely get a Date object
 const toDate = (timestamp: Timestamp | string | undefined): Date | null => {
@@ -34,6 +37,7 @@ const toDate = (timestamp: Timestamp | string | undefined): Date | null => {
 
 export default function PostView({ post: initialPost }: { post: Post }) {
   const { user } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const [post, setPost] = useState(initialPost);
   const [author, setAuthor] = useState<UserProfile | null>(null);
@@ -42,8 +46,10 @@ export default function PostView({ post: initialPost }: { post: Post }) {
   const [isLiking, setIsLiking] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const postDate = toDate(post.createdAt);
+  const isAuthor = user?.uid === post.authorId;
 
   useEffect(() => {
     // Fetch author
@@ -58,6 +64,9 @@ export default function PostView({ post: initialPost }: { post: Post }) {
     const unsubPost = onSnapshot(postDocRef, (docSnap) => {
         if(docSnap.exists()) {
             setPost({ id: docSnap.id, ...docSnap.data() } as Post);
+        } else {
+            // Post was deleted, close the view
+            router.back();
         }
     });
 
@@ -73,7 +82,7 @@ export default function PostView({ post: initialPost }: { post: Post }) {
         unsubPost();
         unsubLike();
     }
-  }, [post.id, post.authorId, user]);
+  }, [post.id, post.authorId, user, router]);
   
   useEffect(() => {
     const commentsQuery = query(collection(db, `posts/${post.id}/comments`), orderBy('createdAt', 'asc'));
@@ -179,7 +188,20 @@ export default function PostView({ post: initialPost }: { post: Post }) {
     }
   };
 
+  const handleDeletePost = async () => {
+    try {
+      await deleteDoc(doc(db, 'posts', post.id));
+      toast({ title: "Post deleted successfully" });
+      setIsDeleteDialogOpen(false);
+      // The onSnapshot listener will trigger the router.back()
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: "Error deleting post", description: error.message });
+    }
+  };
+
+
   return (
+    <>
     <div className="flex flex-col md:flex-row w-full h-full bg-card">
       {post.imageUrl && (
         <div className="w-full md:w-1/2 lg:w-3/5 relative bg-black/90 md:rounded-l-lg overflow-hidden">
@@ -189,13 +211,31 @@ export default function PostView({ post: initialPost }: { post: Post }) {
       <div className={cn("w-full flex flex-col", post.imageUrl && "md:w-1/2 lg:w-2/5")}>
         {author && (
           <div className="flex items-center p-4 border-b">
-            <Link href={`/${author.username}`} className="flex items-center gap-3">
+            <Link href={`/${author.username}`} className="flex items-center gap-3 flex-1">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={author.photoURL} alt={author.username} />
                 <AvatarFallback>{author.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="font-semibold text-sm hover:underline">{author.username}</span>
             </Link>
+             {isAuthor && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-8 h-8">
+                    <MoreHorizontal className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>Edit</DropdownMenuItem>
+                  <DropdownMenuItem>Hide like count</DropdownMenuItem>
+                  <DropdownMenuItem>Turn off commenting</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         )}
         <ScrollArea className="flex-1">
@@ -275,5 +315,20 @@ export default function PostView({ post: initialPost }: { post: Post }) {
         </div>
       </div>
     </div>
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your post and remove its data from our servers.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePost} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

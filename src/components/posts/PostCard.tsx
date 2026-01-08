@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
 import type { Post, UserProfile } from '@/lib/types';
-import { doc, getDoc, serverTimestamp, runTransaction, onSnapshot, collection } from 'firebase/firestore';
-import { Heart, MessageCircle } from 'lucide-react';
+import { doc, getDoc, serverTimestamp, runTransaction, onSnapshot, collection, deleteDoc } from 'firebase/firestore';
+import { Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -15,6 +15,23 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Timestamp } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 
 
 // Helper function to safely get a Date object
@@ -36,10 +53,14 @@ const toDate = (timestamp: Timestamp | string | undefined): Date | null => {
 
 export default function PostCard({ post }: { post: Post }) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [author, setAuthor] = useState<UserProfile | null>(null);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [isLiked, setIsLiked] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const postDate = toDate(post.createdAt);
+
+  const isAuthor = user?.uid === post.authorId;
 
   useEffect(() => {
     const fetchAuthor = async () => {
@@ -113,6 +134,18 @@ export default function PostCard({ post }: { post: Post }) {
     }
   };
 
+  const handleDeletePost = async () => {
+    try {
+      await deleteDoc(doc(db, 'posts', post.id));
+      toast({ title: "Post deleted successfully" });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: "Error deleting post", description: error.message });
+    } finally {
+        setIsDeleteDialogOpen(false);
+    }
+  };
+
+
   if (!author) {
     return (
       <div className="glass-card overflow-hidden rounded-xl">
@@ -132,15 +165,35 @@ export default function PostCard({ post }: { post: Post }) {
   }
 
   return (
+    <>
     <div className="glass-card overflow-hidden rounded-xl">
       <div className="flex items-center p-4">
-        <Link href={`/${author.username}`} className="flex items-center gap-3">
+        <Link href={`/${author.username}`} className="flex items-center gap-3 flex-1">
             <Avatar className="h-10 w-10 border">
               <AvatarImage src={author.photoURL} alt={author.username} />
               <AvatarFallback>{author.username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="font-semibold text-sm hover:underline">{author.username}</span>
         </Link>
+
+        {isAuthor && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="w-8 h-8">
+                <MoreHorizontal className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem>Hide like count</DropdownMenuItem>
+              <DropdownMenuItem>Turn off commenting</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {post.imageUrl && (
@@ -190,5 +243,20 @@ export default function PostCard({ post }: { post: Post }) {
         </div>
       </div>
     </div>
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your post and remove its data from our servers.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePost} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

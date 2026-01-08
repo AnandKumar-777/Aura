@@ -26,6 +26,8 @@ export interface Post {
   likeCount: number;
   commentCount: number;
   author?: UserProfile;
+  likesHidden?: boolean;
+  commentingDisabled?: boolean;
 }
 
 export interface Comment {
