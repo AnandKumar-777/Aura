@@ -11,14 +11,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from 'firebase/auth';
-import { Home, LogOut, PlusSquare, Search, User, Bell, MessageSquare } from 'lucide-react';
+import { LogOut, User, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { auth } from '@/lib/firebase';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export default function Header() {
   const { user, userProfile, unreadNotificationsCount } = useAuth();
@@ -33,8 +32,9 @@ export default function Header() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center max-w-5xl">
         <div className="flex-1 flex justify-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex flex-col items-center">
                 <span className="font-bold font-headline text-2xl text-white tracking-[0.3em]" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>AURA</span>
+                <span className="text-xs text-muted-foreground -mt-1">By Anand</span>
             </Link>
         </div>
 
