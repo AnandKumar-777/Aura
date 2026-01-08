@@ -133,5 +133,12 @@ service cloud.firestore {
                      && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
         allow write: if false;
     }
+    
+    // FCM TOKENS
+    // Users can only create and update their own FCM token.
+    match /fcmTokens/{userId} {
+        allow read: if false;
+        allow write: if isSignedIn() && isOwner(userId);
+    }
   }
 }

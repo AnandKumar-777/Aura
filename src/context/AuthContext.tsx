@@ -3,11 +3,11 @@
 
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { auth, db } from '@/lib/firebase';
+import { auth, db, fetchToken } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import FullScreenLoader from '@/components/shared/FullScreenLoader';
 
@@ -34,10 +34,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
+    const handleToken = async (currentUser: User) => {
+        if ('serviceWorker' in navigator) {
+            const token = await fetchToken();
+            if (token) {
+                // Save the token to Firestore
+                const tokenRef = doc(db, 'fcmTokens', currentUser.uid);
+                await setDoc(tokenRef, { token, updatedAt: serverTimestamp() });
+            }
+        }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       if (user) {
         setUser(user);
+        handleToken(user);
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {

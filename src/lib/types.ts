@@ -76,3 +76,8 @@ export interface Message {
     createdAt: SerializableTimestamp;
     author?: UserProfile;
 }
+
+export interface FcmToken {
+    token: string;
+    updatedAt: SerializableTimestamp;
+}

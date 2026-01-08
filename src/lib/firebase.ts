@@ -3,6 +3,7 @@ import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore, initializeFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -40,6 +41,37 @@ if (!getApps().length) {
 
 const auth: Auth = getAuth(app);
 const storage: FirebaseStorage = getStorage(app);
+const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
+
+
+/**
+ * Requests permission for push notifications and returns the token.
+ * @returns A promise that resolves with the FCM token, or null if permission is denied.
+ */
+export const fetchToken = async () => {
+    if (!messaging) return null;
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const token = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY });
+            return token;
+        } else {
+            console.log('Unable to get permission to notify.');
+            return null;
+        }
+    } catch (error) {
+        console.error('An error occurred while retrieving token. ', error);
+        return null;
+    }
+};
+
+if (typeof window !== 'undefined' && messaging) {
+    onMessage(messaging, (payload) => {
+        console.log('Message received. ', payload);
+        // You can display a custom in-app notification here if the app is in the foreground.
+    });
+}
+
 
 /**
  * Universal file upload utility for Firebase Storage.
@@ -89,4 +121,4 @@ export async function uploadFile(
   }
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, messaging };
