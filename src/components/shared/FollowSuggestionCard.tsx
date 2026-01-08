@@ -12,15 +12,23 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '../ui/skeleton';
 
+const DISMISS_KEY = 'aura_dev_suggestion_dismissed';
+
 export default function FollowSuggestionCard({ userIdToFollow }: { userIdToFollow: string }) {
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Check localStorage on mount
+    const dismissed = localStorage.getItem(DISMISS_KEY);
+    if (dismissed !== 'true') {
+        setIsVisible(true);
+    }
+    
     // Fetch profile to follow
     getDoc(doc(db, 'users', userIdToFollow)).then(docSnap => {
         if (docSnap.exists()) {
@@ -43,6 +51,11 @@ export default function FollowSuggestionCard({ userIdToFollow }: { userIdToFollo
     return () => unsubscribe();
 
   }, [currentUser, userIdToFollow]);
+  
+  const handleDismiss = () => {
+    localStorage.setItem(DISMISS_KEY, 'true');
+    setIsVisible(false);
+  }
 
   const handleFollowToggle = async () => {
     if (!currentUser || !profile || isUpdating) return;
@@ -85,6 +98,8 @@ export default function FollowSuggestionCard({ userIdToFollow }: { userIdToFollo
           });
         }
       });
+      // After following successfully, also dismiss the card
+      handleDismiss();
     } catch (e) {
       console.error('Follow transaction failed: ', e);
     }
@@ -92,7 +107,7 @@ export default function FollowSuggestionCard({ userIdToFollow }: { userIdToFollo
   };
 
   if (!isVisible || loadingProfile || !profile) {
-    if (loadingProfile) {
+    if (loadingProfile && isVisible) {
         return (
             <div className="glass-card p-4 rounded-xl space-y-3 relative">
                 <Skeleton className="h-4 w-40" />
@@ -111,7 +126,7 @@ export default function FollowSuggestionCard({ userIdToFollow }: { userIdToFollo
 
   return (
     <div className="glass-card p-4 rounded-xl space-y-3 relative">
-        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => setIsVisible(false)}>
+        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={handleDismiss}>
             <X className="h-4 w-4" />
         </Button>
         <h3 className="font-semibold text-foreground">Follow our Developers Account</h3>
