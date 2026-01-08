@@ -6,12 +6,13 @@ import { getStorage, type FirebaseStorage, ref, uploadBytes, getDownloadURL } fr
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBb9bMSjwiYZukLB1Sx8a7KgSRU_7O2Zho",
+  authDomain: "prototype-7406b.firebaseapp.com",
+  projectId: "prototype-7406b",
+  storageBucket: "prototype-7406b.appspot.com",
+  messagingSenderId: "467671478130",
+  appId: "1:467671478130:web:917ef54c92f26944e677eb",
+  measurementId: "G-V4KS5SBZW5"
 };
 
 // Initialize Firebase
