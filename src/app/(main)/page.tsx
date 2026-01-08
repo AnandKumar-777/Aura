@@ -8,26 +8,22 @@ import {
   orderBy,
   limit,
   getDocs,
-  collectionGroup,
 } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import type { Post, UserProfile } from '@/lib/types';
+import type { Post } from '@/lib/types';
 import PostCard from '@/components/posts/PostCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import StoryBar from '@/components/stories/StoryBar';
-import UserList from '@/components/profile/UserList';
 
 function EmptyFeed() {
     return (
         <div className="space-y-6 text-left">
             <div className="p-4 rounded-xl glass-card">
                  <h2 className="text-xl font-headline mb-2">Welcome to AURA</h2>
-                 <p className="text-muted-foreground mb-4">Your feed is being personalized for you. The more you interact, the better it gets.</p>
+                 <p className="text-muted-foreground mb-4">Follow people to see their posts here. The more you interact, the better your feed gets.</p>
             </div>
         </div>
     );
@@ -65,26 +61,25 @@ export default function HomePage() {
         const followingSnapshot = await getDocs(followingQuery);
         const followingIds = followingSnapshot.docs.map((doc) => doc.id);
         
-        const followedUserIds = [...followingIds, user.uid]; // Include own posts in feed
+        const feedUserIds = [...new Set([...followingIds, user.uid])]; // Include own posts in feed
 
-        if (followedUserIds.length === 0) {
+        if (feedUserIds.length === 0) {
             setPosts([]);
             setLoading(false);
             return;
         }
 
-        // Firestore 'in' queries are limited to 30 items. We need to batch requests.
-        const userIdChunks = chunkArray(followedUserIds, 30);
-        const postPromises: Promise<any>[] = [];
-
-        userIdChunks.forEach(chunk => {
+        // Firestore 'in' queries are limited to 30 items per query.
+        const userIdChunks = chunkArray(feedUserIds, 30);
+        
+        const postPromises = userIdChunks.map(chunk => {
             const postsQuery = query(
               collection(db, 'posts'),
               where('authorId', 'in', chunk),
               orderBy('createdAt', 'desc'),
               limit(20) // Get up to 20 posts per chunk
             );
-            postPromises.push(getDocs(postsQuery));
+            return getDocs(postsQuery);
         });
         
         const allPostsSnapshots = await Promise.all(postPromises);
@@ -96,11 +91,14 @@ export default function HomePage() {
             });
         });
         
-        // Sort all fetched posts by creation date
+        // Sort all fetched posts by creation date, as they come from multiple queries
         postsData.sort((a, b) => {
             const dateA = a.createdAt as any;
             const dateB = b.createdAt as any;
-            return dateB.seconds - dateA.seconds;
+            if (dateA?.seconds === dateB?.seconds) {
+                return (dateB?.nanoseconds || 0) - (dateA?.nanoseconds || 0);
+            }
+            return (dateB?.seconds || 0) - (dateA?.seconds || 0);
         });
 
         // Limit the final feed size
