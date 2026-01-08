@@ -67,11 +67,18 @@ service cloud.firestore {
     // Users can read comments.
     // Users can only create comments for themselves.
     // Users can only delete their own comments.
+    // Allow collection group read for fetching user's comments.
      match /posts/{postId}/comments/{commentId} {
         allow read: if isSignedIn();
         allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
         allow delete: if isSignedIn() && isOwner(resource.data.authorId);
     }
+
+    // COLLECTION GROUP FOR COMMENTS
+    match /{path=**}/comments/{commentId} {
+        allow list: if isSignedIn();
+    }
+
 
     // FOLLOWING
     // Users can see who a user is following.

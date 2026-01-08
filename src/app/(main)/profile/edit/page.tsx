@@ -15,10 +15,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, uploadFile } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Shield, User, Lock, MessageSquare, AtSign, UserX, HelpCircle } from 'lucide-react';
+import { Loader2, Shield, User, Lock, MessageSquare, AtSign, UserX, HelpCircle, ChevronRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Display name is required').max(50),
@@ -112,130 +113,151 @@ export default function EditProfilePage() {
   };
 
   const settingsItems = [
-      { icon: User, text: 'Personal Details', content: 'Manage your personal information.'},
-      { icon: Lock, text: 'Password and security', content: 'Change your password and manage security settings.'},
-      { icon: MessageSquare, text: 'Comments', content: 'View and manage posts you have commented on.'},
-      { icon: AtSign, text: 'Tag and Mention', content: 'Manage who can tag and mention you.'},
-      { icon: UserX, text: 'Muted/blocked Account', content: 'Manage accounts you have muted or blocked.'},
-      { icon: HelpCircle, text: 'Help', content: 'Get help with Aura.'},
+      { icon: AtSign, text: 'Tag and Mention', content: 'Feature coming soon: Manage who can tag and mention you.'},
+      { icon: UserX, text: 'Muted/blocked Account', content: 'Feature coming soon: Manage accounts you have muted or blocked.'},
+      { icon: HelpCircle, text: 'Help', content: 'Feature coming soon: Get help with Aura.'},
   ]
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-headline font-bold mb-6">Edit Profile</h1>
+      <h1 className="text-2xl font-headline font-bold mb-6">Settings</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="flex items-center gap-4">
-            <Avatar className="w-20 h-20">
-              <AvatarImage src={preview || userProfile.photoURL} />
-              <AvatarFallback>{userProfile.username[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="font-semibold">{userProfile.username}</h2>
-              <FormField
-                control={form.control}
-                name="photo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-primary cursor-pointer hover:underline">
-                      Change profile photo
-                      <FormControl>
-                        <Input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleImageChange}
+          
+          <Accordion type="single" collapsible className="w-full" defaultValue="personal-details">
+              <AccordionItem value="personal-details">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-3">
+                        <User className="h-5 w-5"/> Personal Details
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-6 pt-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="w-20 h-20">
+                        <AvatarImage src={preview || userProfile.photoURL} />
+                        <AvatarFallback>{userProfile.username[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                        <h2 className="font-semibold">{userProfile.username}</h2>
+                        <FormField
+                            control={form.control}
+                            name="photo"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-primary cursor-pointer hover:underline">
+                                Change profile photo
+                                <FormControl>
+                                    <Input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    />
+                                </FormControl>
+                                </FormLabel>
+                                <FormMessage />
+                            </FormItem>
+                            )}
                         />
-                      </FormControl>
-                    </FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+                        </div>
+                    </div>
 
-          <FormField
-            control={form.control}
-            name="displayName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your display name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    <FormField
+                        control={form.control}
+                        name="displayName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Your display name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
 
-          <FormField
-            control={form.control}
-            name="bio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bio</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="A little bit about yourself" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <Separator />
-          
-          <div className="space-y-4">
-             <h2 className="text-lg font-semibold">Additional Settings</h2>
-             <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="account-type">
+                    <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Bio</FormLabel>
+                            <FormControl>
+                            <Textarea placeholder="A little bit about yourself" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </AccordionContent>
+              </AccordionItem>
+
+            <AccordionItem value="account-type">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-3">
+                        <Shield className="h-5 w-5"/> Account type and tools
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <FormField
+                    control={form.control}
+                    name="isPrivate"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                            Private Account
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                            When your account is private, only people you approve can see your posts.
+                            </p>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        </FormItem>
+                    )}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="password">
+                 <Link href="/profile/security" className="flex items-center justify-between w-full py-4 font-medium hover:underline">
+                    <div className="flex items-center gap-3">
+                        <Lock className="h-5 w-5"/> Password and security
+                    </div>
+                    <ChevronRight className="h-4 w-4" />
+                 </Link>
+            </AccordionItem>
+
+            <AccordionItem value="comments">
+                 <Link href="/profile/comments" className="flex items-center justify-between w-full py-4 font-medium hover:underline">
+                    <div className="flex items-center gap-3">
+                        <MessageSquare className="h-5 w-5"/> Comments
+                    </div>
+                    <ChevronRight className="h-4 w-4" />
+                 </Link>
+            </AccordionItem>
+
+            {settingsItems.map(item => (
+                    <AccordionItem value={item.text} key={item.text}>
                     <AccordionTrigger>
                         <div className="flex items-center gap-3">
-                            <Shield className="h-5 w-5"/> Account type and tools
+                            <item.icon className="h-5 w-5"/> {item.text}
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                       <FormField
-                        control={form.control}
-                        name="isPrivate"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                                <FormLabel className="text-base">
-                                Private Account
-                                </FormLabel>
-                                <p className="text-sm text-muted-foreground">
-                                When your account is private, only people you approve can see your photos and videos.
-                                </p>
-                            </div>
-                            <FormControl>
-                                <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                />
-                            </FormControl>
-                            </FormItem>
-                        )}
-                        />
+                        {item.content}
                     </AccordionContent>
                 </AccordionItem>
+            ))}
 
-                {settingsItems.map(item => (
-                     <AccordionItem value={item.text} key={item.text}>
-                        <AccordionTrigger>
-                            <div className="flex items-center gap-3">
-                                <item.icon className="h-5 w-5"/> {item.text}
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                           {item.content}
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-
-             </Accordion>
-          </div>
-
+            </Accordion>
+          
+          <Separator />
 
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
