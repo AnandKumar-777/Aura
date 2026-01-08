@@ -25,7 +25,7 @@ service cloud.firestore {
     // USERS
     // Users can read anyone's profile.
     // Users can only create their own profile.
-    // Users can only update their own bio, displayName, and photoURL.
+    // Users can only update their own bio, displayName, photoURL, and isPrivate status.
     match /users/{userId} {
       allow read: if true;
       allow create: if isSignedIn() && isOwner(userId)

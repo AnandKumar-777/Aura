@@ -15,12 +15,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, uploadFile } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield, User, Lock, MessageSquare, AtSign, UserX, HelpCircle } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Display name is required').max(50),
   bio: z.string().max(150, 'Bio must be 150 characters or less').optional(),
   photo: z.instanceof(File).optional(),
+  isPrivate: z.boolean().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -37,6 +41,7 @@ export default function EditProfilePage() {
     defaultValues: {
       displayName: '',
       bio: '',
+      isPrivate: false,
     },
   });
 
@@ -45,6 +50,7 @@ export default function EditProfilePage() {
       form.reset({
         displayName: userProfile.displayName || '',
         bio: userProfile.bio || '',
+        isPrivate: userProfile.isPrivate || false,
       });
       setPreview(userProfile.photoURL);
     }
@@ -79,7 +85,7 @@ export default function EditProfilePage() {
         const imageFile = data.photo;
         const folder = `profilePictures/${user.uid}`;
         const fileName = 'profile.jpg'; // Overwrite the same file
-        photoURL = await uploadFile(imageFile, folder, fileName, 2); // Max 2MB for profile pics
+        photoURL = await uploadFile(imageFile, folder, 2); // Max 2MB for profile pics
       }
       
       const userDocRef = doc(db, 'users', user.uid);
@@ -87,6 +93,7 @@ export default function EditProfilePage() {
         displayName: data.displayName,
         bio: data.bio,
         photoURL: photoURL,
+        isPrivate: data.isPrivate,
       });
 
       toast({ title: 'Profile updated successfully!' });
@@ -103,6 +110,15 @@ export default function EditProfilePage() {
       setIsSubmitting(false);
     }
   };
+
+  const settingsItems = [
+      { icon: User, text: 'Personal Details', content: 'Manage your personal information.'},
+      { icon: Lock, text: 'Password and security', content: 'Change your password and manage security settings.'},
+      { icon: MessageSquare, text: 'Comments', content: 'View and manage posts you have commented on.'},
+      { icon: AtSign, text: 'Tag and Mention', content: 'Manage who can tag and mention you.'},
+      { icon: UserX, text: 'Muted/blocked Account', content: 'Manage accounts you have muted or blocked.'},
+      { icon: HelpCircle, text: 'Help', content: 'Get help with Aura.'},
+  ]
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -166,10 +182,64 @@ export default function EditProfilePage() {
               </FormItem>
             )}
           />
+          
+          <Separator />
+          
+          <div className="space-y-4">
+             <h2 className="text-lg font-semibold">Additional Settings</h2>
+             <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="account-type">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                            <Shield className="h-5 w-5"/> Account type and tools
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                       <FormField
+                        control={form.control}
+                        name="isPrivate"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                Private Account
+                                </FormLabel>
+                                <p className="text-sm text-muted-foreground">
+                                When your account is private, only people you approve can see your photos and videos.
+                                </p>
+                            </div>
+                            <FormControl>
+                                <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            </FormItem>
+                        )}
+                        />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {settingsItems.map(item => (
+                     <AccordionItem value={item.text} key={item.text}>
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-3">
+                                <item.icon className="h-5 w-5"/> {item.text}
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           {item.content}
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+
+             </Accordion>
+          </div>
+
 
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Submit
+            Save Changes
           </Button>
         </form>
       </Form>
