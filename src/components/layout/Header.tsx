@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from 'firebase/auth';
-import { LogOut, User, Bell } from 'lucide-react';
+import { LogOut, User, Bell, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -34,7 +34,7 @@ export default function Header() {
         <div className="flex-1 flex justify-center">
             <Link href="/" className="flex flex-col items-center">
                 <span className="font-bold font-headline text-2xl text-white tracking-[0.3em]" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>AURA</span>
-                <span className="text-xs text-muted-foreground -mt-1 uppercase tracking-widest" style={{ textShadow: '0 0 8px rgba(255,255,255,0.3)' }}>By Anand</span>
+                <span className="text-xs text-muted-foreground -mt-1 uppercase tracking-widest" style={{ textShadow: '0 0 8px rgba(255,255,255,0.3)' }}>BY ANAND</span>
             </Link>
         </div>
 
@@ -91,6 +91,7 @@ export default function Header() {
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/profile/edit">
+                        <Settings className="mr-2 h-4 w-4" />
                         <span>Edit Profile</span>
                     </Link>
                 </DropdownMenuItem>
