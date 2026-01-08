@@ -138,7 +138,7 @@ export default function EditProfilePage() {
                         <AvatarFallback>{userProfile.username[0].toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                        <h2 className="font-semibold">{userProfile.username}</h2>
+                        <h2 className="font-semibold">{userProfile.displayName || userProfile.username}</h2>
                         <FormField
                             control={form.control}
                             name="photo"
@@ -224,21 +224,21 @@ export default function EditProfilePage() {
                 </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="password">
-                 <Link href="/profile/security" className="flex items-center justify-between w-full py-4 font-medium hover:underline">
+            <AccordionItem value="password-link" className="border-b">
+                 <Link href="/profile/security" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
                     <div className="flex items-center gap-3">
                         <Lock className="h-5 w-5"/> Password and security
                     </div>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 transition-transform" />
                  </Link>
             </AccordionItem>
 
-            <AccordionItem value="comments">
-                 <Link href="/profile/comments" className="flex items-center justify-between w-full py-4 font-medium hover:underline">
+            <AccordionItem value="comments-link" className="border-b">
+                 <Link href="/profile/comments" className="flex items-center justify-between w-full py-4 font-medium hover:underline [&>svg]:-rotate-90">
                     <div className="flex items-center gap-3">
                         <MessageSquare className="h-5 w-5"/> Comments
                     </div>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 transition-transform" />
                  </Link>
             </AccordionItem>
 
