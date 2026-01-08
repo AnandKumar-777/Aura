@@ -63,7 +63,8 @@ export default function HomePage() {
         const followingSnapshot = await getDocs(followingQuery);
         const followingIds = followingSnapshot.docs.map((doc) => doc.id);
         
-        const feedUserIds = [...new Set([...followingIds, user.uid])]; // Include own posts in feed
+        // Include own posts in feed
+        const feedUserIds = [...new Set([...followingIds, user.uid])];
 
         if (feedUserIds.length === 0) {
             setPosts([]);
