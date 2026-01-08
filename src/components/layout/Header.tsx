@@ -34,7 +34,7 @@ export default function Header() {
         <div className="flex-1 flex justify-center">
             <Link href="/" className="flex flex-col items-center">
                 <span className="font-bold font-headline text-2xl text-white tracking-[0.3em]" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>AURA</span>
-                <span className="text-xs text-muted-foreground -mt-1">By Anand</span>
+                <span className="text-xs text-muted-foreground -mt-1 uppercase tracking-widest" style={{ textShadow: '0 0 8px rgba(255,255,255,0.3)' }}>By Anand</span>
             </Link>
         </div>
 
