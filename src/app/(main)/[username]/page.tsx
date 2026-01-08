@@ -4,12 +4,12 @@ type PageProps = {
     }>;
   };
   
-  export default async function ProfilePage({ params }: PageProps) {
+  export default async function FollowingPage({ params }: PageProps) {
     const { username } = await params;
   
     return (
       <div>
-        Profile of {username}
+        Following of {username}
       </div>
     );
   }

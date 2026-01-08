@@ -8,12 +8,6 @@ type LayoutProps = {
 };
 
 export default async function UserLayout({ params, children }: LayoutProps) {
-  const { username } = await params;
-
-  return (
-    <div>
-      {/* optional: username context */}
-      {children}
-    </div>
-  );
+  await params; // ensures Next.js 15 async params compliance
+  return <>{children}</>;
 }
