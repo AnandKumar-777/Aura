@@ -30,7 +30,11 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container flex h-16 items-center max-w-5xl">
+      <div className="container flex h-16 items-center justify-between max-w-5xl mx-auto px-4">
+        {/* Left placeholder for spacing */}
+        <div className="w-24"></div> 
+        
+        {/* Centered Logo */}
         <div className="flex-1 flex justify-center">
             <Link href="/" className="flex flex-col items-center">
                 <span className="font-bold font-headline text-2xl text-white tracking-[0.3em]" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>AURA</span>
@@ -39,7 +43,7 @@ export default function Header() {
         </div>
 
         {/* Right-aligned user menu and notifications */}
-        <div className="flex items-center justify-end space-x-1 sm:space-x-2 absolute right-4">
+        <div className="flex items-center justify-end space-x-1 sm:space-x-2 w-24">
            <Button variant="ghost" size="icon" asChild className="relative text-foreground/80 hover:text-foreground hover:bg-accent hidden md:flex">
             <Link href="/notifications">
                 <Bell />
@@ -92,7 +96,7 @@ export default function Header() {
                  <DropdownMenuItem asChild>
                     <Link href="/profile/edit">
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Edit Profile</span>
+                        <span>Settings</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

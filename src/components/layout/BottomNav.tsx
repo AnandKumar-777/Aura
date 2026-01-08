@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 export default function BottomNav() {
   const { userProfile, unreadNotificationsCount } = useAuth();
@@ -42,9 +43,9 @@ export default function BottomNav() {
               <Link href={item.href}>
                 <item.icon className="h-6 w-6" />
                 {item.label === 'Notifications' && unreadNotificationsCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
+                    <Badge variant="destructive" className="absolute top-1 right-1 h-4 w-4 justify-center p-0 text-xs">
                         {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                    </span>
+                    </Badge>
                 )}
                 <span className="sr-only">{item.label}</span>
               </Link>
